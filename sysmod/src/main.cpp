@@ -32,44 +32,66 @@ struct DebugEventInfo {
 };
 
 template<typename T>
-constexpr void str2hex(const char* s, T* data, u8& size) {
-    // skip leading 0x (if any)
-    if (s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) {
-        s += 2;
-    }
+constexpr void hex_to_bytes(const char* s, T* data, u8& size) {
+    if (s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) s += 2;
 
-    // invalid string will cause a compile-time error due to no return
-    constexpr auto hexstr_2_nibble = [](char c) -> u8 {
-        if (c >= 'A' && c <= 'F') { return c - 'A' + 10; }
-        if (c >= 'a' && c <= 'f') { return c - 'a' + 10; }
-        if (c >= '0' && c <= '9') { return c - '0'; }
+    constexpr auto nibble = [](char c) -> u8 {
+        if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+        if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+        if (c >= '0' && c <= '9') return c - '0';
+        return 0;
     };
 
-    // parse and convert string
-    while (*s != '\0') {
-        if (sizeof(T) == sizeof(u16) && *s == '.') {
-            data[size] = REGEX_SKIP;
-            s++;
+    while (*s) {
+        u8 high = nibble(*s++);
+        u8 low  = nibble(*s++);
+        data[size++] = (high << 4) | low;
+    }
+}
+
+template<typename T>
+constexpr void pattern_to_bytes(const char* s, T* data, u8& size) {
+    if (s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) s += 2;
+
+    constexpr auto nibble = [](char c) -> u8 {
+        if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+        if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+        if (c >= '0' && c <= '9') return c - '0';
+        return 0;
+    };
+
+    while (*s) {
+        if (*s == '.') {
+            u8 dot_count = 0;
+            while (s[dot_count] == '.') ++dot_count;
+
+            u8 wildcards = dot_count / 2;
+
+            for (u8 i = 0; i < wildcards; ++i) {
+                data[size++] = REGEX_SKIP;
+            }
+
+            s += dot_count;
         } else {
-            data[size] |= hexstr_2_nibble(*s++) << 4;
-            data[size] |= hexstr_2_nibble(*s++) << 0;
+            u8 high = nibble(*s++);
+            u8 low  = nibble(*s++);
+            data[size++] = (high << 4) | low;
         }
-        size++;
     }
 }
 
 struct PatternData {
     constexpr PatternData(const char* s) {
-        str2hex(s, data, size);
+        pattern_to_bytes(s, data, size);
     }
 
-    u16 data[60]{}; // reasonable max pattern length, adjust as needed
+    u16 data[60]{};
     u8 size{};
 };
 
 struct PatchData {
     constexpr PatchData(const char* s) {
-        str2hex(s, data, size);
+        hex_to_bytes(s, data, size);
     }
 
     template<typename T>
@@ -84,7 +106,7 @@ struct PatchData {
         return !std::memcmp(data, _data, size);
     }
 
-    u8 data[20]{}; // reasonable max patch length, adjust as needed
+    u8 data[20]{};
     u8 size{};
 };
 
@@ -238,11 +260,12 @@ constexpr auto ctest_applied(const u8* data, u32 inst) -> bool {
 constinit Patterns fs_patterns[] = {
     { "noacidsigchk_1.0.0-9.2.0", "0xC8FE4739", -24, 0, bl_cond, ret0_patch, ret0_applied, true, FW_VER_ANY, MAKEHOSVERSION(9,2,0) }, // moved to loader 10.0.0
     { "noacidsigchk_1.0.0-9.2.0", "0x0210911F000072", -5, 0, bl_cond, ret0_patch, ret0_applied, true, FW_VER_ANY, MAKEHOSVERSION(9,2,0) }, // moved to loader 10.0.0
-    { "noncasigchk_10.0.0-16.1.0", "0x1E48391F.0071..0054", -17, 0, tbz_cond, nop_patch, nop_applied, true, MAKEHOSVERSION(10,0,0), MAKEHOSVERSION(16,1,0) },
-    { "noncasigchk_17.0.0+", "0x0694..00.42.0091", -18, 0, tbz_cond, nop_patch, nop_applied, true, MAKEHOSVERSION(17,0,0), FW_VER_ANY },
-    { "nocntchk_10.0.0-18.1.0", "0x00..0240F9....08.....00...00...0037", 6, 0, bl_cond, ret0_patch, ret0_applied, true, MAKEHOSVERSION(10,0,0), MAKEHOSVERSION(18,1,0) },
-    { "nocntchk_19.0.0-20.5.0", "0x00..0240F9....08.....00...00...0054", 6, 0, bl_cond, ret0_patch, ret0_applied, true, MAKEHOSVERSION(19,0,0), MAKEHOSVERSION(20,5,0) },
-    { "nocntchk_21.0.0+", "0x00..0240F9....E8.....00...00...0054", 6, 0, bl_cond, ret0_patch, ret0_applied, true, MAKEHOSVERSION(21,0,0), FW_VER_ANY },
+    { "noncasigchk_1.0.0-3.0.2", "0x881E42B958808C521FC14271", -4, 0, tbz_cond, nop_patch, nop_applied, true, MAKEHOSVERSION(1,0,0), MAKEHOSVERSION(3,0,2) },
+    { "noncasigchk_4.0.0-16.1.0", "0x1E4839....00......0054", -17, 0, tbz_cond, nop_patch, nop_applied, true, MAKEHOSVERSION(4,0,0), MAKEHOSVERSION(16,1,0) },
+    { "noncasigchk_17.0.0+", "0x0694....00..42..0091", -18, 0, tbz_cond, nop_patch, nop_applied, true, MAKEHOSVERSION(17,0,0), FW_VER_ANY },
+    { "nocntchk_1.0.0-18.1.0", "0x00....0240F9........08..........00......00......0037", 6, 0, bl_cond, ret0_patch, ret0_applied, true, MAKEHOSVERSION(1,0,0), MAKEHOSVERSION(18,1,0) },
+    { "nocntchk_19.0.0-20.5.0", "0x00....0240F9........08..........00......00......0054", 6, 0, bl_cond, ret0_patch, ret0_applied, true, MAKEHOSVERSION(19,0,0), MAKEHOSVERSION(20,5,0) },
+    { "nocntchk_21.0.0+", "0x00....0240F9........E8..........00......00......0054", 6, 0, bl_cond, ret0_patch, ret0_applied, true, MAKEHOSVERSION(21,0,0), FW_VER_ANY },
 };
 
 constinit Patterns ldr_patterns[] = {
@@ -250,20 +273,20 @@ constinit Patterns ldr_patterns[] = {
 };
 
 constinit Patterns erpt_patterns[] = {
-    { "no_erpt", "0x...D1FD7B02A9FD830091F76305A9", 0, 0, sub_cond, mov0_ret_patch, mov0_ret_applied, true, FW_VER_ANY }, // FF4305D1 - sub sp, sp, #0x150 patched to E0031F2AC0035FD6 - mov w0, wzr, ret 
+    { "no_erpt", "0xFD7B02A9FD830091F76305A9", -4, 0, sub_cond, mov0_ret_patch, mov0_ret_applied, true, FW_VER_ANY }, // FF4305D1 - sub sp, sp, #0x150 patched to E0031F2AC0035FD6 - mov w0, wzr, ret 
 };
 
 constinit Patterns es_patterns[] = {
-    { "es_1.0.0-8.1.1", "0x....E8.00...FF97.0300AA..00.....E0.0091..0094.7E4092.......A9", 36, 0, es_cond, mov0_patch, mov0_applied, true, MAKEHOSVERSION(1,0,0), MAKEHOSVERSION(8,1,1) },
-    { "es_9.0.0-11.0.1", "0x00...............00.....A0..D1...97.......A9", 30, 0, es_cond, mov0_patch, mov0_applied, true, MAKEHOSVERSION(9,0,0), MAKEHOSVERSION(11,0,1) },
-    { "es_12.0.0-18.1.0", "0x02.00...........00...00.....A0..D1...97.......A9", 32, 0, es_cond, mov0_patch, mov0_applied, true, MAKEHOSVERSION(12,0,0), MAKEHOSVERSION(18,1,0) },
-    { "es_19.0.0+", "0xA1.00...........00...00.....A0..D1...97.......A9", 32, 0, es_cond, mov0_patch, mov0_applied, true, MAKEHOSVERSION(19,0,0), FW_VER_ANY },
+    { "es_1.0.0-8.1.1", "0xE8..00......FF97..0300AA....00..........E0..0091....0094..7E4092..............A9", 32, 0, es_cond, mov0_patch, mov0_applied, true, MAKEHOSVERSION(1,0,0), MAKEHOSVERSION(8,1,1) },
+    { "es_9.0.0-11.0.1", "0x00..............................00..........A0....D1......97..............A9", 30, 0, es_cond, mov0_patch, mov0_applied, true, MAKEHOSVERSION(9,0,0), MAKEHOSVERSION(11,0,1) },
+    { "es_12.0.0-18.1.0", "0x02..00......................00......00..........A0....D1......97..............A9", 32, 0, es_cond, mov0_patch, mov0_applied, true, MAKEHOSVERSION(12,0,0), MAKEHOSVERSION(18,1,0) },
+    { "es_19.0.0+", "0xA1..00......................00......00..........A0....D1......97..............A9", 32, 0, es_cond, mov0_patch, mov0_applied, true, MAKEHOSVERSION(19,0,0), FW_VER_ANY },
 };
 
 constinit Patterns olsc_patterns[] = {
-    { "olsc_6.0.0-14.1.2", "0x00.73..F968024039..00...00", 42, 0, bl_cond, ret1_patch, ret1_applied, true, MAKEHOSVERSION(6,0,0), MAKEHOSVERSION(14,1,2) },
-    { "olsc_15.0.0-18.1.0", "0x00.73..F968024039..00...00", 38, 0, bl_cond, ret1_patch, ret1_applied, true, MAKEHOSVERSION(15,0,0), MAKEHOSVERSION(18,1,0) },
-    { "olsc_19.0.0+", "0x00.73..F968024039..00...00", 42, 0, bl_cond, ret1_patch, ret1_applied, true, MAKEHOSVERSION(19,0,0), FW_VER_ANY },
+    { "olsc_6.0.0-14.1.2", "0x00..73....F968024039....00......00", 42, 0, bl_cond, ret1_patch, ret1_applied, true, MAKEHOSVERSION(6,0,0), MAKEHOSVERSION(14,1,2) },
+    { "olsc_15.0.0-18.1.0", "0x00..73....F968024039....00......00", 38, 0, bl_cond, ret1_patch, ret1_applied, true, MAKEHOSVERSION(15,0,0), MAKEHOSVERSION(18,1,0) },
+    { "olsc_19.0.0+", "0x00..73....F968024039....00......00", 42, 0, bl_cond, ret1_patch, ret1_applied, true, MAKEHOSVERSION(19,0,0), FW_VER_ANY },
 };
 
 constinit Patterns nifm_patterns[] = {
@@ -272,11 +295,12 @@ constinit Patterns nifm_patterns[] = {
 };
 
 constinit Patterns nim_patterns[] = {
-    { "blankcal0crashfix_17.0.0+", "0x00351F2003D5...............97..0094..00.....61", 6, 0, adr_cond, mov2_patch, mov2_applied, true, MAKEHOSVERSION(17,0,0), FW_VER_ANY },
-    { "blockfirmwareupdates_1.0.0-5.1.0", "0x1139F30301AA81.40F9E0.1191", -30, 0, block_fw_updates_cond, mov0_ret_patch, mov0_ret_applied, true, MAKEHOSVERSION(1,0,0), MAKEHOSVERSION(5,1,0) },
-    { "blockfirmwareupdates_6.0.0-6.2.0", "0xF30301AA.4E40F9E0..91", -40, 0, block_fw_updates_cond, mov0_ret_patch, mov0_ret_applied, true, MAKEHOSVERSION(6,0,0), MAKEHOSVERSION(6,2,0) },
-    { "blockfirmwareupdates_7.0.0-11.0.1", "0xF30301AA014C40F9F40300AAE0..91", -36, 0, block_fw_updates_cond, mov0_ret_patch, mov0_ret_applied, true, MAKEHOSVERSION(7,0,0), MAKEHOSVERSION(11,0,1) },
-    { "blockfirmwareupdates_12.0.0+", "0x280841F9084C00F9E0031F.C0035FD6", 16, 0, block_fw_updates_cond, mov0_ret_patch, mov0_ret_applied, true, MAKEHOSVERSION(12,0,0), FW_VER_ANY },
+    { "blankcal0crashfix_17.0.0+", "0x00351F2003D5..............................97....0094....00..........61", 6, 0, adr_cond, mov2_patch, mov2_applied, true, MAKEHOSVERSION(17,0,0), FW_VER_ANY },
+    { "blockfirmwareupdates_1.0.0-5.1.0", "0x1139F30301AA81..40F9E0..1191", -30, 0, block_fw_updates_cond, mov0_ret_patch, mov0_ret_applied, true, MAKEHOSVERSION(1,0,0), MAKEHOSVERSION(5,1,0) },
+    { "blockfirmwareupdates_6.0.0-6.2.0", "0xF30301AA..4E40F9E0....91", -40, 0, block_fw_updates_cond, mov0_ret_patch, mov0_ret_applied, true, MAKEHOSVERSION(6,0,0), MAKEHOSVERSION(6,2,0) },
+    { "blockfirmwareupdates_7.0.0-10.2.0", "0xF30301AA014C40F9F40300AAE0....91", -36, 0, block_fw_updates_cond, mov0_ret_patch, mov0_ret_applied, true, MAKEHOSVERSION(7,0,0), MAKEHOSVERSION(10,2,0) },
+    { "blockfirmwareupdates_11.0.0-11.0.1", "0x280841F9084C00F9................................C0035FD6", 28, 0, block_fw_updates_cond, mov0_ret_patch, mov0_ret_applied, true, MAKEHOSVERSION(11,0,0), MAKEHOSVERSION(11,0,1) },
+    { "blockfirmwareupdates_12.0.0+", "0x280841F9084C00F9........C0035FD6", 16, 0, block_fw_updates_cond, mov0_ret_patch, mov0_ret_applied, true, MAKEHOSVERSION(12,0,0), FW_VER_ANY },
 };
 
 // NOTE: add system titles that you want to be patched to this table.

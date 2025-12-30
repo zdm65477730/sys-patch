@@ -101,9 +101,10 @@ public:
         list->addItem(new tsl::elm::CategoryHeader("FS - 0100000000000000"));
         list->addItem(config_noacidsigchk1.create_list_item("noacidsigchk_1.0.0-9.2.0"));
         list->addItem(config_noacidsigchk2.create_list_item("noacidsigchk_1.0.0-9.2.0"));
-        list->addItem(config_noncasigchk1.create_list_item("noncasigchk_10.0.0-16.1.0"));
-        list->addItem(config_noncasigchk2.create_list_item("noncasigchk_17.0.0+"));
-        list->addItem(config_nocntchk1.create_list_item("nocntchk_10.0.0-18.1.0"));
+        list->addItem(config_noncasigchk1.create_list_item("noncasigchk_1.0.0-3.0.2"));
+        list->addItem(config_noncasigchk2.create_list_item("noncasigchk_4.0.0-16.1.0"));
+        list->addItem(config_noncasigchk3.create_list_item("noncasigchk_17.0.0+"));
+        list->addItem(config_nocntchk1.create_list_item("nocntchk_1.0.0-18.1.0"));
         list->addItem(config_nocntchk2.create_list_item("nocntchk_19.0.0-20.5.0"));
         list->addItem(config_nocntchk3.create_list_item("nocntchk_21.0.0+"));
 
@@ -132,8 +133,9 @@ public:
         list->addItem(config_nim1.create_list_item("blankcal0crashfix_17.0.0+"));
         list->addItem(config_nim_fw1.create_list_item("blockfirmwareupdates_1.0.0-5.1.0"));
         list->addItem(config_nim_fw2.create_list_item("blockfirmwareupdates_6.0.0-6.2.0"));
-        list->addItem(config_nim_fw3.create_list_item("blockfirmwareupdates_7.0.0-11.0.1"));
-        list->addItem(config_nim_fw4.create_list_item("blockfirmwareupdates_12.0.0+"));
+        list->addItem(config_nim_fw3.create_list_item("blockfirmwareupdates_7.0.0-10.2.0"));
+        list->addItem(config_nim_fw4.create_list_item("blockfirmwareupdates_11.0.0-11.0.1"));
+        list->addItem(config_nim_fw5.create_list_item("blockfirmwareupdates_12.0.0+"));
 
         frame->setContent(list);
         return frame;
@@ -141,9 +143,10 @@ public:
 
     ConfigEntry config_noacidsigchk1{"fs", "noacidsigchk_1.0.0-9.2.0", true};
     ConfigEntry config_noacidsigchk2{"fs", "noacidsigchk_1.0.0-9.2.0", true};
-    ConfigEntry config_noncasigchk1{"fs", "noncasigchk_10.0.0-16.1.0", true};
-    ConfigEntry config_noncasigchk2{"fs", "noncasigchk_17.0.0+", true};
-    ConfigEntry config_nocntchk1{"fs", "nocntchk_10.0.0-18.1.0", true};
+    ConfigEntry config_noncasigchk1{"fs", "noncasigchk_1.0.0-3.0.2", true};
+    ConfigEntry config_noncasigchk2{"fs", "noncasigchk_4.0.0-16.1.0", true};
+    ConfigEntry config_noncasigchk3{"fs", "noncasigchk_17.0.0+", true};
+    ConfigEntry config_nocntchk1{"fs", "nocntchk_1.0.0-18.1.0", true};
     ConfigEntry config_nocntchk2{"fs", "nocntchk_19.0.0-20.5.0", true};
     ConfigEntry config_nocntchk3{"fs", "nocntchk_21.0.0+", true};
     ConfigEntry config_noacidsigchk3{"ldr", "noacidsigchk_10.0.0+", true};
@@ -160,8 +163,9 @@ public:
     ConfigEntry config_nim1{"nim", "blankcal0crashfix_17.0.0+", true};
     ConfigEntry config_nim_fw1{"nim", "blockfirmwareupdates_1.0.0-5.1.0", true};
     ConfigEntry config_nim_fw2{"nim", "blockfirmwareupdates_6.0.0-6.2.0", true};
-    ConfigEntry config_nim_fw3{"nim", "blockfirmwareupdates_7.0.0-11.0.1", true};
-    ConfigEntry config_nim_fw4{"nim", "blockfirmwareupdates_12.0.0+", true};
+    ConfigEntry config_nim_fw3{"nim", "blockfirmwareupdates_7.0.0-10.2.0", true};
+    ConfigEntry config_nim_fw4{"nim", "blockfirmwareupdates_11.0.0-11.0.1", true};
+    ConfigEntry config_nim_fw5{"nim", "blockfirmwareupdates_12.0.0+", true};
 };
 
 class GuiLog final : public tsl::Gui {
