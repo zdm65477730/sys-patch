@@ -57,7 +57,7 @@ constexpr void pattern_to_bytes(const char* s, T* data, u8& size) {
         if (c >= 'A' && c <= 'F') return c - 'A' + 10;
         if (c >= 'a' && c <= 'f') return c - 'a' + 10;
         if (c >= '0' && c <= '9') return c - '0';
-        return 0;
+        return 0xFF; // invalid → will fail match
     };
 
     while (*s) {
@@ -72,10 +72,42 @@ constexpr void pattern_to_bytes(const char* s, T* data, u8& size) {
             }
 
             s += dot_count;
+
         } else {
-            u8 high = nibble(*s++);
-            u8 low  = nibble(*s++);
-            data[size++] = (high << 4) | low;
+            u16 value = 0;
+            bool is_wild_high = false;
+            bool is_wild_low  = false;
+
+            // High nibble
+            if (*s == '?') {
+                is_wild_high = true;
+                ++s;
+            } else {
+                value |= nibble(*s++) << 8;
+            }
+
+            // Low nibble
+            if (*s == '?') {
+                is_wild_low = true;
+                ++s;
+            } else {
+                value |= nibble(*s++);
+            }
+
+            if (is_wild_high && is_wild_low) {
+                // ?? → full byte wildcard (same as ..)
+                data[size++] = REGEX_SKIP;
+            } else if (is_wild_high || is_wild_low) {
+                // Partial match: store value with high bit set to indicate mask needed
+                // We'll use: if value >= 0x100 → it's a masked byte
+                // value & 0xFF = actual byte, value >> 8 = mask (0xF0 or 0x0F)
+                u8 actual = value & 0xFF;
+                u8 mask   = is_wild_high ? 0x0F : 0xF0;
+                data[size++] = actual | (static_cast<u16>(mask) << 8);
+            } else {
+                // Exact byte
+                data[size++] = value;
+            }
         }
     }
 }
@@ -257,6 +289,32 @@ constexpr auto ctest_applied(const u8* data, u32 inst) -> bool {
     return ctest_patch(inst).cmp(data);
 }
 
+// Note: Patterns can compose of byte wildcards represented as ".." or "??". Patterns can also consist of high, or low nibble wildcarding, represented, with the example being wildcarded being "A9" as "A?" or "?9".
+// example 1: just byte wildcarding:
+// C8FE4739 -> C8....39 = 2 bytes wildcarded
+// C8FE4739 -> C8????39 = 2 bytes wildcarded
+// C8FE4739 -> C?F?4??9 = 4 nibbles wildcarded
+// nibble wildcarding must be done with "?", and must not be mixed with ".", ".." should be used when wildcarding an entire byte, or "??", but not a mix of "?." or ".?"
+// a pattern can contain both "..", "??", or nibble wildcarding, as long as one does not mix "?." or "?."
+// patterns should be optimized in such a manner that they yield only one result.
+// patterns might yield results for more firmware versions, but if it yields more than one result (per firmware version), it should be condensed to near similar versions instead which only yields one result.
+// a pattern should not contain the bytes being patched, they should be wildcarded.
+// if the bytes being patched align with the patch partially, then the partial bytes can be in the pattern, the same applies to if the pattern contains the length of the patch.
+// the bytes being tested are defined by the _cond, and does not need to be in the pattern, and shouldn't be in the pattern, if the bytes being tested are also the bytes being patched.
+// () indicate testing, {} indicate what is being patched
+// example:
+// "0x00....0240F9........E8", 6, 0,
+// the bytes being tested, and patch size is the same, 6 from start of pattern, then patch 0 from start of where the test was designated:
+// "0x00....0240F9{(........)}E8"
+// if moving the head from what is being tested, the bytes, if in pattern, should be wildcarded by the length of the patch being applied
+// "0x00....0240F9........E8C8FE4739", 6, 4,
+// example {} should be wildcarded, as those are the bytes being patched, the bytes being tested can in that context contain bytes in the pattern:
+// "0x00....0240F9(......94){E8C8FE47}39", 6, 4,
+// example with wildcarding:
+// "0x00....0240F9(......94){........}39", 6, 4,
+//
+// designing new patterns should ideally conform to specification above.
+
 constinit Patterns fs_patterns[] = {
     { "noacidsigchk_1.0.0-9.2.0", "0xC8FE4739", -24, 0, bl_cond, ret0_patch, ret0_applied, true, FW_VER_ANY, MAKEHOSVERSION(9,2,0) }, // moved to loader 10.0.0
     { "noacidsigchk_1.0.0-9.2.0", "0x0210911F000072", -5, 0, bl_cond, ret0_patch, ret0_applied, true, FW_VER_ANY, MAKEHOSVERSION(9,2,0) }, // moved to loader 10.0.0
@@ -369,8 +427,22 @@ void patcher(Handle handle, const u8* data, size_t data_size, u64 addr, std::spa
             // skipping over any bytes if the value is REGEX_SKIP
             u32 count{};
             while (count < p.byte_pattern.size) {
-                if (p.byte_pattern.data[count] != data[i + count] && p.byte_pattern.data[count] != REGEX_SKIP) {
-                    break;
+                u16 pattern_entry = p.byte_pattern.data[count];
+                u8 memory_byte    = data[i + count];
+
+                if (pattern_entry == REGEX_SKIP) {
+                    // full wildcard — always matches
+                } else if (pattern_entry > 0xFF) {
+                    // masked nibble match
+                    u8 expected = pattern_entry & 0xFF;
+                    u8 mask     = pattern_entry >> 8;
+                    if ((memory_byte & mask) != (expected & mask)) {
+                        break;
+                    }
+                } else {
+                    if (memory_byte != pattern_entry) {
+                        break;
+                    }
                 }
                 count++;
             }
