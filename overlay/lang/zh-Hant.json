@@ -7,7 +7,7 @@
     "VersionSkipGuiOptionsToggleListItemText": "版本跳過",
     "FSGuiToggleToggleCategoryHeaderText": "檔案系統",
     "FSNoAcidSigChkFat32V1GuiToggleToggleListItemText": "禁止FAT32 ACID簽章驗證（1.0.0-9.2.0）",
-    "FSNoAcidSigChkExFatV1GuiToggleToggleListItemText": "禁止exFAT ACID簽章驗證2（1.0.0-9.2.0）",
+    "FSNoAcidSigChkExFatV1GuiToggleToggleListItemText": "禁止exFAT ACID簽章驗證（1.0.0-9.2.0）",
     "FSNoNCASigChkV1GuiToggleToggleListItemText": "禁止NCA檔案簽章驗證（1.0.0-3.0.2）",
     "FSNoNCASigChkV2GuiToggleToggleListItemText": "禁止NCA檔案簽章驗證（4.0.0-16.1.0）",
     "FSNoNCASigChkV3GuiToggleToggleListItemText": "禁止NCA檔案簽章驗證（17.0.0+）",

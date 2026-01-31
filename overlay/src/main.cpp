@@ -300,7 +300,7 @@ public:
                 "VersionSkipGuiOptionsToggleListItemText": "Version skip",
                 "FSGuiToggleToggleCategoryHeaderText": "File System",
                 "FSNoAcidSigChkFat32V1GuiToggleToggleListItemText": "Disable FAT32 ACID Signature Check [1.0.0-9.2.0]",
-                "FSNoAcidSigChkExFatV1GuiToggleToggleListItemText": "Disable exFAT ACID Signature Check2 [1.0.0-9.2.0]",
+                "FSNoAcidSigChkExFatV1GuiToggleToggleListItemText": "Disable exFAT ACID Signature Check [1.0.0-9.2.0]",
                 "FSNoNCASigChkV1GuiToggleToggleListItemText": "Disable NCA File Signature Check [1.0.0-3.0.2]",
                 "FSNoNCASigChkV2GuiToggleToggleListItemText": "Disable NCA File Signature Check [4.0.0-16.1.0]",
                 "FSNoNCASigChkV3GuiToggleToggleListItemText": "Disable NCA File Signature Check [17.0.0+]",
