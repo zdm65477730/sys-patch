@@ -167,7 +167,9 @@ $(BUILD):
 
 	@rm -rf out/
 	@mkdir -p out/atmosphere/contents/420000000000000B/flags
+	@mkdir -p out/config/$(TARGET)/
 	@touch out/atmosphere/contents/420000000000000B/flags/boot2.flag
+	@cp $(CURDIR)/../configs/default_config.ini out/config/$(TARGET)/config.ini
 	@cp $(CURDIR)/toolbox.json out/atmosphere/contents/420000000000000B/toolbox.json
 	@cp $(CURDIR)/$(TARGET).nsp out/atmosphere/contents/420000000000000B/exefs.nsp
 

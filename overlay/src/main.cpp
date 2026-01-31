@@ -4,10 +4,62 @@
 #include <string_view>
 #include "minIni/minIni.h"
 
+using namespace tsl;
+
 namespace {
 
 constexpr auto CONFIG_PATH = "/config/sys-patch/config.ini";
 constexpr auto LOG_PATH = "/config/sys-patch/log.ini";
+
+std::string map_section_to_text(std::string &section) {
+    std::string sectionDisplay{section};
+    if (sectionDisplay == "fs") {
+        sectionDisplay = "FsGuiLogListItemText"_tr;
+    } else if (sectionDisplay == "ldr") {
+        sectionDisplay = "LdrGuiLogListItemText"_tr;
+    } else if (sectionDisplay == "erpt") {
+        sectionDisplay = "ErptGuiLogListItemText"_tr;
+    } else if (sectionDisplay == "es") {
+        sectionDisplay = "EsGuiLogListItemText"_tr;
+    } else if (sectionDisplay == "olsc") {
+        sectionDisplay = "OlscGuiLogListItemText"_tr;
+    } else if (sectionDisplay == "nifm") {
+        sectionDisplay = "NifmGuiLogListItemText"_tr;
+    } else if (sectionDisplay == "nim") {
+        sectionDisplay = "NimGuiLogListItemText"_tr;
+    } else if (sectionDisplay == "stats") {
+        sectionDisplay = "StatsGuiLogListItemText"_tr;
+    }
+    return sectionDisplay;
+}
+
+std::string map_stats_to_text(const char *stat) {
+    std::string statDisplay{stat};
+    if (statDisplay == "version") {
+        statDisplay = "VersionGuiLogListItemText"_tr;
+    } else if (statDisplay == "build_date") {
+        statDisplay = "BuildDateGuiLogListItemText"_tr;
+    } else if (statDisplay == "fw_version") {
+        statDisplay = "FWVersionGuiLogListItemText"_tr;
+    } else if (statDisplay == "ams_version") {
+        statDisplay = "AMSVersionGuiLogListItemText"_tr;
+    } else if (statDisplay == "ams_target_version") {
+        statDisplay = "AMSTargetVersionGuiLogListItemText"_tr;
+    } else if (statDisplay == "ams_keygen") {
+        statDisplay = "AMSKeygenGuiLogListItemText"_tr;
+    } else if (statDisplay == "ams_hash") {
+        statDisplay = "AMSHashGuiLogListItemText"_tr;
+    } else if (statDisplay == "is_emummc") {
+        statDisplay = "IsEmummcGuiLogListItemText"_tr;
+    } else if (statDisplay == "heap_size") {
+        statDisplay = "HeapSizeGuiLogListItemText"_tr;
+    } else if (statDisplay == "buffer_size") {
+        statDisplay = "BufferSizeGuiLogListItemText"_tr;
+    } else if (statDisplay == "patch_time") {
+        statDisplay = "Patch_timeGuiLogListItemText"_tr;
+    }
+    return statDisplay;
+}
 
 // Color constants for logging
 constexpr tsl::Color COLOR_SYSPATCH{0, 255, 200, 255};
@@ -25,70 +77,70 @@ struct PatchConfig {
     u8 patch_count;
 };
 
-constexpr PatchConfig PATCH_CONFIGS[] = {
+PatchConfig PATCH_CONFIGS[] = {
     {
-        "fs", "0100000000000000",
+        "FSGuiToggleToggleCategoryHeaderText"_tr.c_str(), "0100000000000000",
         {
-            {"noacidsigchk_1.0.0-9.2.0", "noacidsigchk_1.0.0-9.2.0"},
-            {"noacidsigchk_1.0.0-9.2.0", "noacidsigchk_1.0.0-9.2.0"},
-            {"noncasigchk_1.0.0-3.0.2", "noncasigchk_1.0.0-3.0.2"},
-            {"noncasigchk_4.0.0-16.1.0", "noncasigchk_4.0.0-16.1.0"},
-            {"noncasigchk_17.0.0+", "noncasigchk_17.0.0+"},
-            {"nocntchk_1.0.0-18.1.0", "nocntchk_1.0.0-18.1.0"},
-            {"nocntchk_19.0.0+", "nocntchk_19.0.0+"},
+            {"FSNoAcidSigChkFat32V1GuiToggleToggleListItemText"_tr.c_str(), "noacidsigchk_1.0.0-9.2.0"},
+            {"FSNoAcidSigChkExFatV1GuiToggleToggleListItemText"_tr.c_str(), "noacidsigchk_1.0.0-9.2.0"},
+            {"FSNoNCASigChkV1GuiToggleToggleListItemText"_tr.c_str(), "noncasigchk_1.0.0-3.0.2"},
+            {"FSNoNCASigChkV2GuiToggleToggleListItemText"_tr.c_str(), "noncasigchk_4.0.0-16.1.0"},
+            {"FSNoNCASigChkV3GuiToggleToggleListItemText"_tr.c_str(), "noncasigchk_17.0.0+"},
+            {"FSNoCNTChkV1GuiToggleToggleListItemText"_tr.c_str(), "nocntchk_1.0.0-18.1.0"},
+            {"FSNoCNTChkV2GuiToggleToggleListItemText"_tr.c_str(), "nocntchk_19.0.0+"},
         },
         7
     },
     {
-        "ldr", "0100000000000001",
+        "LDRGuiToggleCategoryHeaderText"_tr.c_str(), "0100000000000001",
         {
-            {"noacidsigchk_10.0.0+", "noacidsigchk_10.0.0+"},
+            {"LDRNoAcidSigChkV1GuiToggleToggleListItemText"_tr.c_str(), "noacidsigchk_10.0.0+"},
         },
         1
     },
     {
-        "erpt", "010000000000002B",
+        "ERPTGuiToggleCategoryHeaderText"_tr.c_str(), "010000000000002B",
         {
-            {"no_erpt", "no_erpt"},
+            {"ERPTNoErrorReportGuiToggleToggleListItemText"_tr.c_str(), "no_erpt"},
         },
         1
     },
     {
-        "es", "0100000000000033",
+        "ESGuiToggleCategoryHeaderText"_tr.c_str(), "0100000000000033",
         {
-            {"es_1.0.0-8.1.1", "es_1.0.0-8.1.1"},
-            {"es_9.0.0-11.0.1", "es_9.0.0-11.0.1"},
-            {"es_12.0.0-18.1.0", "es_12.0.0-18.1.0"},
-            {"es_19.0.0+", "es_19.0.0+"},
+            {"ESeTicketChkV1GuiToggleToggleListItemText"_tr.c_str(), "es_1.0.0-8.1.1"},
+            {"ESeTicketChkV2GuiToggleToggleListItemText"_tr.c_str(), "es_9.0.0-11.0.1"},
+            {"ESeTicketChkV3GuiToggleToggleListItemText"_tr.c_str(), "es_12.0.0-18.1.0"},
+            {"ESeTicketChkV4GuiToggleToggleListItemText"_tr.c_str(), "es_19.0.0+"},
         },
         4
     },
     {
-        "olsc", "010000000000003E",
+        "OLSCGuiToggleCategoryHeaderText"_tr.c_str(), "010000000000003E",
         {
-            {"olsc_6.0.0-14.1.2", "olsc_6.0.0-14.1.2"},
-            {"olsc_15.0.0-18.1.0", "olsc_15.0.0-18.1.0"},
-            {"olsc_19.0.0+", "olsc_19.0.0+"},
+            {"OnlineSaveStorageChkV1GuiToggleToggleListItemText"_tr.c_str(), "olsc_6.0.0-14.1.2"},
+            {"OnlineSaveStorageChkV2GuiToggleToggleListItemText"_tr.c_str(), "olsc_15.0.0-18.1.0"},
+            {"OnlineSaveStorageChkV3GuiToggleToggleListItemText"_tr.c_str(), "olsc_19.0.0+"},
         },
         3
     },
     {
-        "nifm", "010000000000000F",
+        "NIFMGuiToggleCategoryHeaderText"_tr.c_str(), "010000000000000F",
         {
-            {"ctest_1.0.0-19.0.1", "ctest_1.0.0-19.0.1"},
-            {"ctest_20.0.0+", "ctest_20.0.0+"},
+            {"NIFMCtestV1GuiToggleToggleListItemText"_tr.c_str(), "ctest_1.0.0-19.0.1"},
+            {"NIFMCtestV2GuiToggleToggleListItemText"_tr.c_str(), "ctest_20.0.0+"},
         },
         2
     },
     {
-        "nim", "0100000000000025",
+        "NIMGuiToggleCategoryHeaderText"_tr.c_str(), "0100000000000025",
         {
-            {"blankcal0crashfix_17.0.0+", "blankcal0crashfix_17.0.0+"},
-            {"blockfirmwareupdates_1.0.0-5.1.0", "blockfirmwareupdates_1.0.0-5.1.0"},
-            {"blockfirmwareupdates_6.0.0-6.2.0", "blockfirmwareupdates_6.0.0-6.2.0"},
-            {"blockfirmwareupdates_7.0.0-10.2.0", "blockfirmwareupdates_7.0.0-10.2.0"},
-            {"blockfirmwareupdates_11.0.0-11.0.1", "blockfirmwareupdates_11.0.0-11.0.1"},
-            {"blockfirmwareupdates_12.0.0+", "blockfirmwareupdates_12.0.0+"},
+            {"NIMFixBlankCal0CrashGuiToggleToggleListItemText"_tr.c_str(), "blankcal0crashfix_17.0.0+"},
+            {"NIMBlockFWUpgradeV1GuiToggleToggleListItemText"_tr.c_str(), "blockfirmwareupdates_1.0.0-5.1.0"},
+            {"NIMBlockFWUpgradeV2GuiToggleToggleListItemText"_tr.c_str(), "blockfirmwareupdates_6.0.0-6.2.0"},
+            {"NIMBlockFWUpgradeV3GuiToggleToggleListItemText"_tr.c_str(), "blockfirmwareupdates_7.0.0-10.2.0"},
+            {"NIMBlockFWUpgradeV4GuiToggleToggleListItemText"_tr.c_str(), "blockfirmwareupdates_11.0.0-11.0.1"},
+            {"NIMBlockFWUpgradeV5GuiToggleToggleListItemText"_tr.c_str(), "blockfirmwareupdates_12.0.0+"},
         },
         6
     },
@@ -129,13 +181,12 @@ auto create_dir(const char* path) -> bool {
 class GuiOptions final : public tsl::Gui {
 public:
     GuiOptions() { }
-
     tsl::elm::Element* createUI() override {
-        auto frame = new tsl::elm::OverlayFrame("sys-patch", VERSION_WITH_HASH);
+        auto frame = new tsl::elm::OverlayFrame("PluginName"_tr, VERSION_WITH_HASH);
         auto list = new tsl::elm::List();
 
-        list->addItem(new tsl::elm::CategoryHeader("Options"));
-        
+        list->addItem(new tsl::elm::CategoryHeader("OptionsGuiOptionsCategoryHeaderText"_tr));
+
         auto add_option = [list](const char* section, const char* key, bool default_value, const char* label) {
             const auto value = ini_getbool(section, key, default_value, CONFIG_PATH);
             auto item = new tsl::elm::ToggleListItem(label, value);
@@ -145,10 +196,10 @@ public:
             list->addItem(item);
         };
 
-        add_option("options", "patch_sysmmc", true, "Patch sysMMC");
-        add_option("options", "patch_emummc", true, "Patch emuMMC");
-        add_option("options", "enable_logging", true, "Logging");
-        add_option("options", "version_skip", true, "Version skip");
+        add_option("options", "patch_sysmmc", true, "PatchSysMMCGuiOptionsToggleListItemText"_tr.c_str());
+        add_option("options", "patch_emummc", true, "PatchEmuMMCGuiOptionsToggleListItemText"_tr.c_str());
+        add_option("options", "enable_logging", true, "LoggingGuiOptionsToggleListItemText"_tr.c_str());
+        add_option("options", "version_skip", true, "VersionSkipGuiOptionsToggleListItemText"_tr.c_str());
 
         frame->setContent(list);
         return frame;
@@ -158,9 +209,8 @@ public:
 class GuiToggle final : public tsl::Gui {
 public:
     GuiToggle() { }
-
     tsl::elm::Element* createUI() override {
-        auto frame = new tsl::elm::OverlayFrame("sys-patch", VERSION_WITH_HASH);
+        auto frame = new tsl::elm::OverlayFrame("PluginName"_tr, VERSION_WITH_HASH);
         auto list = new tsl::elm::List();
 
         for (const auto& config : PATCH_CONFIGS) {
@@ -191,7 +241,7 @@ public:
     GuiLog() { }
 
     tsl::elm::Element* createUI() override {
-        auto frame = new tsl::elm::OverlayFrame("sys-patch", VERSION_WITH_HASH);
+        auto frame = new tsl::elm::OverlayFrame("PluginName"_tr, VERSION_WITH_HASH);
         auto list = new tsl::elm::List();
 
         if (does_file_exist(LOG_PATH)) {
@@ -210,16 +260,18 @@ public:
 
                 if (data->last_section != Section) {
                     data->last_section = Section;
-                    data->list->addItem(new tsl::elm::CategoryHeader("Log: " + data->last_section));
+                    data->list->addItem(new tsl::elm::CategoryHeader("LogGuiLogCategoryHeaderText"_tr + map_section_to_text(data->last_section)));
                 }
 
                 if (value.starts_with("Patched")) {
                     const auto color = value.ends_with("(sys-patch)") ? COLOR_SYSPATCH : COLOR_FILE;
-                    data->list->addItem(new tsl::elm::ListItem(Key, "Patched", color));
-                } else if (value.starts_with("Unpatched") || value.starts_with("Disabled")) {
-                    data->list->addItem(new tsl::elm::ListItem(Key, Value, COLOR_UNPATCHED));
+                    data->list->addItem(new tsl::elm::ListItem(Key, "PatchedGuiLogListItemText"_tr, color));
+                } else if (value.starts_with("Unpatched")) {
+                    data->list->addItem(new tsl::elm::ListItem(Key, "UnPatchedGuiLogListItemText"_tr, COLOR_UNPATCHED));
+                } else if (value.starts_with("Disabled")) {
+                    data->list->addItem(new tsl::elm::ListItem(Key, "DisabledGuiLogListItemText"_tr, COLOR_UNPATCHED));
                 } else if (data->last_section == "stats") {
-                    data->list->addItem(new tsl::elm::ListItem(Key, Value, tsl::style::color::ColorDescription));
+                    data->list->addItem(new tsl::elm::ListItem(map_stats_to_text(Key), Value, tsl::style::color::ColorDescription));
                 } else {
                     data->list->addItem(new tsl::elm::ListItem(Key, Value, tsl::style::color::ColorText));
                 }
@@ -227,7 +279,7 @@ public:
                 return 1;
             }, &callback_data, LOG_PATH);
         } else {
-            list->addItem(new tsl::elm::ListItem("No log found!"));
+            list->addItem(new tsl::elm::ListItem("NoLogFoundGuiLogListItemText"_tr.c_str()));
         }
 
         frame->setContent(list);
@@ -237,15 +289,91 @@ public:
 
 class GuiMain final : public tsl::Gui {
 public:
-    GuiMain() { }
+    GuiMain() {
+        std::string jsonStr = R"(
+            {
+                "PluginName": "sys-patch",
+                "OptionsGuiOptionsCategoryHeaderText": "Options",
+                "PatchSysMMCGuiOptionsToggleListItemText": "Patch sysMMC",
+                "PatchemuMMCGuiOptionsToggleListItemText": "Patch emuMMC",
+                "LoggingGuiOptionsToggleListItemText": "Logging",
+                "VersionSkipGuiOptionsToggleListItemText": "Version skip",
+                "FSGuiToggleToggleCategoryHeaderText": "File System",
+                "FSNoAcidSigChkFat32V1GuiToggleToggleListItemText": "Disable FAT32 ACID Signature Check [1.0.0-9.2.0]",
+                "FSNoAcidSigChkExFatV1GuiToggleToggleListItemText": "Disable exFAT ACID Signature Check2 [1.0.0-9.2.0]",
+                "FSNoNCASigChkV1GuiToggleToggleListItemText": "Disable NCA File Signature Check [1.0.0-3.0.2]",
+                "FSNoNCASigChkV2GuiToggleToggleListItemText": "Disable NCA File Signature Check [4.0.0-16.1.0]",
+                "FSNoNCASigChkV3GuiToggleToggleListItemText": "Disable NCA File Signature Check [17.0.0+]",
+                "FSNoCNTChkV1GuiToggleToggleListItemText": "Disable Content Counter Check [1.0.0-18.1.0]",
+                "FSNoCNTChkV2GuiToggleToggleListItemText": "Disable Content Counter Check [19.0.0+]",
+                "LDRGuiToggleCategoryHeaderText": "Module Loader",
+                "LDRNoAcidSigChkV1GuiToggleToggleListItemText": "Disable ACID Signature Check [10.0.0+]",
+                "ERPTGuiToggleCategoryHeaderText": "Error Report",
+                "ERPTNoErrorReportGuiToggleToggleListItemText": "Disable Error Report Upload",
+                "ESGuiToggleCategoryHeaderText": "eTicket Service",
+                "ESeTicketChkV1GuiToggleToggleListItemText": "Disable eTicket Validation [1.0.0-8.1.1]",
+                "ESeTicketChkV2GuiToggleToggleListItemText": "Disable eTicket Validation [9.0.0-11.0.1]",
+                "ESeTicketChkV3GuiToggleToggleListItemText": "Disable eTicket Validation [12.0.0-18.1.0]",
+                "ESeTicketChkV4GuiToggleToggleListItemText": "Disable eTicket Validation [19.0.0+]",
+                "OLSCGuiToggleCategoryHeaderText": "Online Save Storage",
+                "OnlineSaveStorageChkV1GuiToggleToggleListItemText": "Disable Online Save Storage Validation [6.0.0-14.1.2]",
+                "OnlineSaveStorageChkV2GuiToggleToggleListItemText": "Disable Online Save Storage Validation [15.0.0-18.1.0]",
+                "OnlineSaveStorageChkV3GuiToggleToggleListItemText": "Disable Online Save Storage Validation [19.0.0+]",
+                "NIFMGuiToggleCategoryHeaderText": "Network Connection",
+                "NIFMCtestV1GuiToggleToggleListItemText": "Disable Network Connection Test [1.0.0-19.0.1]",
+                "NIFMCtestV2GuiToggleToggleListItemText": "Disable Network Connection Test [20.0.0+]",
+                "NIMGuiToggleCategoryHeaderText": "Network Identity",
+                "NIMFixBlankCal0CrashGuiToggleToggleListItemText": "Fix Blank CAL0 Crash [17.0.0+]",
+                "NIMBlockFWUpgradeV1GuiToggleToggleListItemText": "Block System Firmware Update [1.0.0-5.1.0]",
+                "NIMBlockFWUpgradeV2GuiToggleToggleListItemText": "Block System Firmware Update [6.0.0-6.2.0]",
+                "NIMBlockFWUpgradeV3GuiToggleToggleListItemText": "Block System Firmware Update [7.0.0-10.2.0]",
+                "NIMBlockFWUpgradeV4GuiToggleToggleListItemText": "Block System Firmware Update [11.0.0-11.0.1]",
+                "NIMBlockFWUpgradeV5GuiToggleToggleListItemText": "Block System Firmware Update [12.0.0+]",
+                "LogGuiLogCategoryHeaderText": "Logs:",
+                "PatchedGuiLogListItemText": "Patched",
+                "UnPatchedGuiLogListItemText": "Unpatched",
+                "DisabledGuiLogListItemText": "Disabled",
+                "FsGuiLogListItemText": "File Signature",
+                "LdrGuiLogListItemText": "Module Loader",
+                "ErptGuiLogListItemText": "Error Report",
+                "EsGuiLogListItemText": "eTicket Service",
+                "OlscGuiLogListItemText": "Online Save Storage",
+                "NifmGuiLogListItemText": "Network Connection",
+                "NimGuiLogListItemText": "Network Identity",
+                "StatsGuiLogListItemText": "Statistics",
+                "VersionGuiLogListItemText": "Version",
+                "BuildDateGuiLogListItemText": "Build Date",
+                "FWVersionGuiLogListItemText": "System Firmware Version",
+                "AMSVersionGuiLogListItemText": "Atmosphere Version",
+                "AMSTargetVersionGuiLogListItemText": "Atmosphere Target Version",
+                "AMSKeygenGuiLogListItemText": "Atmosphere Keygen Version",
+                "AMSHashGuiLogListItemText": "Atmosphere Hash Value",
+                "IsEmummcGuiLogListItemText": "Is EmuMMC",
+                "HeapSizeGuiLogListItemText": "Heap Size",
+                "BufferSizeGuiLogListItemText": "Buffer Size",
+                "Patch_timeGuiLogListItemText": "Patch Application Time",
+                "NoLogFoundGuiLogListItemText": "No Logs Found!",
+                "OptionsGuiMainListItemText": "Options",
+                "ToggleGuiMainListItemText": "Toggle Patches",
+                "LogGuiMainListItemText": "Logs",
+                "MenuGuiMainCategoryHeaderText": "Menu"
+            }
+        )";
+        std::string lanPath = std::string("sdmc:/switch/.overlays/lang/") + APPTITLE + "/";
+        fsdevMountSdmc();
+        tsl::hlp::doWithSmSession([&lanPath, &jsonStr]{
+            tsl::tr::InitTrans(lanPath, jsonStr);
+        });
+        fsdevUnmountDevice("sdmc");
+    }
 
     tsl::elm::Element* createUI() override {
-        auto frame = new tsl::elm::OverlayFrame("sys-patch", VERSION_WITH_HASH);
+        auto frame = new tsl::elm::OverlayFrame("PluginName"_tr, VERSION_WITH_HASH);
         auto list = new tsl::elm::List();
 
-        auto options = new tsl::elm::ListItem("Options");
-        auto toggle = new tsl::elm::ListItem("Toggle patches");
-        auto log = new tsl::elm::ListItem("Log");
+        auto options = new tsl::elm::ListItem("OptionsGuiMainListItemText"_tr.c_str());
+        auto toggle = new tsl::elm::ListItem("ToggleGuiMainListItemText"_tr.c_str());
+        auto log = new tsl::elm::ListItem("LogGuiMainListItemText"_tr.c_str());
 
         options->setClickListener([](u64 keys) -> bool {
             if (keys & HidNpadButton_A) {
@@ -271,7 +399,7 @@ public:
             return false;
         });
 
-        list->addItem(new tsl::elm::CategoryHeader("Menu"));
+        list->addItem(new tsl::elm::CategoryHeader("MenuGuiMainCategoryHeaderText"_tr));
         list->addItem(options);
         list->addItem(toggle);
         list->addItem(log);
