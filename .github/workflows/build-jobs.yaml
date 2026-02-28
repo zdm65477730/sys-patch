@@ -23,8 +23,14 @@ jobs:
 
         LIBNX_VER=$(dkp-pacman -Q libnx | cut -d' ' -f2 | cut -d- -f1)
         echo "Detected libnx version: $LIBNX_VER"
+
+        if [ "$LIBNX_VER" = "4.11.0" ]; then
+          EXTRA_FLAGS="-DUSE_DEBUG_EVENT=1"
+        else
+          EXTRA_FLAGS=""
+        fi
         
-        make -C sys-patch -j$(nproc) dist && \
+        make -C sys-patch -j$(nproc) dist EXTRA_FLAGS="$EXTRA_FLAGS" && \
 
         VERSION=$(grep 'export VERSION := ' sys-patch/Makefile | cut -c 19-)
         TAGVERSION=$(curl -s https://api.github.com/repos/$GITHUB_REPOSITORY/releases/latest | grep "tag_name" | head -1 | cut -d '"' -f 4)
