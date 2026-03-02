@@ -27,17 +27,14 @@ export BUILD_DATE := -DDATE_YEAR=\"$(shell date +%Y)\" \
 					-DDATE_MIN=\"$(shell date +%M)\" \
 					-DDATE_SEC=\"$(shell date +%S)\" \
 
-export CUSTOM_DEFINES := -DVERSION=\"v$(VERSION)\" \
-					-DGIT_BRANCH=\"$(GIT_BRANCH)\" \
-					-DGIT_REVISION=\"$(GIT_REVISION)\" \
-					-DVERSION_DIRTY=\"$(VERSION_DIRTY)\" \
-					-DVERSION_WITH_HASH=\"$(VERSION_WITH_HASH)\" \
-					$(BUILD_DATE)
+export CUSTOM_DEFINES := -DVERSION_WITH_HASH=\"$(VERSION_WITH_HASH)\" $(BUILD_DATE)
 
 all: $(TARGETS)
-	@mkdir -p out/
-	@cp -R sysmod/out/* out/
-	@cp -R overlay/out/* out/
+	@rm -rf $(CURDIR)/SdOut
+	@mkdir -p SdOut/
+	@cp -R sysmod/out/* SdOut/
+	@cp -R overlay/out/* SdOut/
+	@cd $(CURDIR)/SdOut; zip -r -q -9 sys-patch.zip atmosphere switch config; cd $(CURDIR)
 
 .PHONY: $(TARGETS)
 
@@ -45,13 +42,6 @@ $(TARGETS):
 	@$(MAKE) -C $@
 
 clean:
-	@rm -rf out
+	@rm -rf $(CURDIR)/SdOut
 	@rm -f sys-patch.zip
 	@for i in $(TARGETS); do $(MAKE) -C $$i clean || exit 1; done;
-
-dist: all
-	@for i in $(TARGETS); do $(MAKE) -C $$i dist || exit 1; done;
-	@echo making dist ...
-
-	@rm -f sys-patch.zip
-	@cd out; zip -r ../sys-patch.zip ./*; cd ../
