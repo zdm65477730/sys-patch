@@ -21,98 +21,44 @@ u64 AMS_HASH{}; // set on startup
 bool VERSION_SKIP{}; // set on startup
 
 template<typename T>
-constexpr void hex_to_bytes(const char* s, T* data, u8& size) {
-    if (s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) s += 2;
-
-    constexpr auto nibble = [](char c) -> u8 {
-        if (c >= 'A' && c <= 'F') return c - 'A' + 10;
-        if (c >= 'a' && c <= 'f') return c - 'a' + 10;
-        if (c >= '0' && c <= '9') return c - '0';
-        return 0;
-    };
-
-    while (*s) {
-        u8 high = nibble(*s++);
-        u8 low  = nibble(*s++);
-        data[size++] = (high << 4) | low;
+constexpr void str2hex(const char* s, T* data, u8& size) {
+    // skip leading 0x (if any)
+    if (s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) {
+        s += 2;
     }
-}
 
-template<typename T>
-constexpr void pattern_to_bytes(const char* s, T* data, u8& size) {
-    if (s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) s += 2;
-
-    constexpr auto nibble = [](char c) -> u8 {
-        if (c >= 'A' && c <= 'F') return c - 'A' + 10;
-        if (c >= 'a' && c <= 'f') return c - 'a' + 10;
-        if (c >= '0' && c <= '9') return c - '0';
-        return 0xFF; // invalid → will fail match
+    // invalid string will cause a compile-time error due to no return
+    constexpr auto hexstr_2_nibble = [](char c) -> u8 {
+        if (c >= 'A' && c <= 'F') { return c - 'A' + 10; }
+        if (c >= 'a' && c <= 'f') { return c - 'a' + 10; }
+        if (c >= '0' && c <= '9') { return c - '0'; }
     };
 
-    while (*s) {
-        if (*s == '.') {
-            u8 dot_count = 0;
-            while (s[dot_count] == '.') ++dot_count;
-
-            u8 wildcards = dot_count / 2;
-
-            for (u8 i = 0; i < wildcards; ++i) {
-                data[size++] = REGEX_SKIP;
-            }
-
-            s += dot_count;
-
+    // parse and convert string
+    while (*s != '\0') {
+        if (sizeof(T) == sizeof(u16) && *s == '.') {
+            data[size] = REGEX_SKIP;
+            s += 2; // consume both dots of ".."
         } else {
-            u16 value = 0;
-            bool is_wild_high = false;
-            bool is_wild_low  = false;
-
-            // High nibble
-            if (*s == '?') {
-                is_wild_high = true;
-                ++s;
-            } else {
-                value |= nibble(*s++) << 8;
-            }
-
-            // Low nibble
-            if (*s == '?') {
-                is_wild_low = true;
-                ++s;
-            } else {
-                value |= nibble(*s++);
-            }
-
-            if (is_wild_high && is_wild_low) {
-                // ?? → full byte wildcard (same as ..)
-                data[size++] = REGEX_SKIP;
-            } else if (is_wild_high || is_wild_low) {
-                // Partial match: store value with high bit set to indicate mask needed
-                // We'll use: if value >= 0x100 → it's a masked byte
-                // value & 0xFF = actual byte, value >> 8 = mask (0xF0 or 0x0F)
-                u8 actual = value & 0xFF;
-                u8 mask   = is_wild_high ? 0x0F : 0xF0;
-                data[size++] = actual | (static_cast<u16>(mask) << 8);
-            } else {
-                // Exact byte
-                data[size++] = value;
-            }
+            data[size] |= hexstr_2_nibble(*s++) << 4;
+            data[size] |= hexstr_2_nibble(*s++) << 0;
         }
+        size++;
     }
 }
 
 struct PatternData {
     constexpr PatternData(const char* s) {
-        pattern_to_bytes(s, data, size);
+        str2hex(s, data, size);
     }
 
-    u16 data[60]{};
+    u16 data[60]{}; // reasonable max pattern length, adjust as needed
     u8 size{};
 };
 
 struct PatchData {
     constexpr PatchData(const char* s) {
-        hex_to_bytes(s, data, size);
+        str2hex(s, data, size);
     }
 
     template<typename T>
@@ -127,7 +73,7 @@ struct PatchData {
         return !std::memcmp(data, _data, size);
     }
 
-    u8 data[20]{};
+    u8 data[20]{}; // reasonable max patch length, adjust as needed
     u8 size{};
 };
 
@@ -342,10 +288,6 @@ constinit Patterns am_patterns[] = {
     { "am_homebrew_fix_22.0.0+", "0x682646391F0500716100005460420691794DFF97", 16, 0, bl_cond, nop_patch, nop_applied, true, 0, MAKEHOSVERSION(22,0,0), MAKEHOSVERSION(22,0,0) },
 };
 
-constinit Patterns am_patterns[] = {
-    { "am_homebrew_fix_22.0.0+", "0x94......F9......F9........00410491", 17, 0, bl_cond, nop_patch, nop_applied, true, MAKEHOSVERSION(22,0,0), FW_VER_ANY },
-};
-
 constinit Patterns olsc_patterns[] = {
     { "olsc_6.0.0-14.1.2", "0x00..73....F9....4039", 42, 0, bl_cond, ret1_patch, ret1_applied, true, 0, MAKEHOSVERSION(6,0,0), MAKEHOSVERSION(14,1,2) },
     { "olsc_15.0.0-18.1.0", "0x00..73....F9....4039", 38, 0, bl_cond, ret1_patch, ret1_applied, true, 0, MAKEHOSVERSION(15,0,0), MAKEHOSVERSION(18,1,0) },
@@ -429,9 +371,7 @@ void patcher(Handle handle, const u8* data, size_t data_size, u64 addr, u64 base
             continue;
         }
 
-        // Try to find and apply this pattern
-        bool found = false;
-        for (u32 i = 0; i < data_size && !found; i++) {
+        for (u32 i = 0; i < data_size; i++) {
             if (i + p.byte_pattern.size >= data_size) {
                 break;
             }
@@ -440,22 +380,8 @@ void patcher(Handle handle, const u8* data, size_t data_size, u64 addr, u64 base
             // skipping over any bytes if the value is REGEX_SKIP
             u32 count{};
             while (count < p.byte_pattern.size) {
-                u16 pattern_entry = p.byte_pattern.data[count];
-                u8 memory_byte    = data[i + count];
-
-                if (pattern_entry == REGEX_SKIP) {
-                    // full wildcard — always matches
-                } else if (pattern_entry > 0xFF) {
-                    // masked nibble match
-                    u8 expected = pattern_entry & 0xFF;
-                    u8 mask     = pattern_entry >> 8;
-                    if ((memory_byte & mask) != (expected & mask)) {
-                        break;
-                    }
-                } else {
-                    if (memory_byte != pattern_entry) {
-                        break;
-                    }
+                if (p.byte_pattern.data[count] != data[i + count] && p.byte_pattern.data[count] != REGEX_SKIP) {
+                    break;
                 }
                 count++;
             }
@@ -505,17 +431,27 @@ void patcher(Handle handle, const u8* data, size_t data_size, u64 addr, u64 base
 }
 
 auto apply_patch(PatchEntry& patch) -> bool {
+    Handle handle{};
+    DebugEventInfo event_info{};
+
+    u64 pids[0x50]{};
+    s32 process_count{};
+    constexpr u64 overlap_size = 0x4f;
+    static u8 buffer[READ_BUFFER_SIZE + overlap_size];
+
+    std::memset(buffer, 0, sizeof(buffer));
+
     // skip if version isn't valid
-    if (!is_patch_version_valid(patch)) {
+    if (VERSION_SKIP &&
+        ((patch.min_fw_ver && patch.min_fw_ver > FW_VERSION) ||
+        (patch.max_fw_ver && patch.max_fw_ver < FW_VERSION))) {
         for (auto& p : patch.patterns) {
             p.result = PatchResult::SKIPPED;
         }
         return true;
     }
 
-    Handle handle{};
-
-    if (!find_process_by_title_id(patch.title_id, handle)) {
+    if (R_FAILED(svcGetProcessList(&process_count, pids, 0x50))) {
         return false;
     }
 

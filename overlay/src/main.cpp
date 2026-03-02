@@ -355,11 +355,11 @@ public:
                         is_sys_patch ? colour_syspatch : colour_file
                     ));
                 } else if (status.starts_with("Unpatched")) {
-                    user->list->addItem(new tsl::elm::ColouredListItem(Key, "UnPatchedGuiLogListItemText"_tr, colour_unpatched));
+                    user->list->addItem(new ColouredListItem(Key, "UnPatchedGuiLogListItemText"_tr, colour_unpatched));
                 } else if (status.starts_with("Disabled")) {
-                    user->list->addItem(new tsl::elm::ColouredListItem(Key, "DisabledGuiLogListItemText"_tr, colour_unpatched));
+                    user->list->addItem(new ColouredListItem(Key, "DisabledGuiLogListItemText"_tr, colour_unpatched));
                 } else if (user->last_section == "stats") {
-                    user->list->addItem(new tsl::elm::ColouredListItem(map_stats_to_text(Key), Value, tsl::style::color::ColorDescription));
+                    user->list->addItem(new ColouredListItem(map_stats_to_text(Key), Value, tsl::style::color::ColorDescription));
                 } else {
                     user->list->addItem(new ColouredListItem(Key, Value, tsl::style::color::ColorText));
                 }
@@ -383,7 +383,7 @@ public:
                 "PluginName": "sys-patch",
                 "OptionsGuiOptionsCategoryHeaderText": "Options",
                 "PatchSysMMCGuiOptionsToggleListItemText": "Patch sysMMC",
-                "PatchemuMMCGuiOptionsToggleListItemText": "Patch emuMMC",
+                "PatchEmuMMCGuiOptionsToggleListItemText": "Patch emuMMC",
                 "LoggingGuiOptionsToggleListItemText": "Logging",
                 "VersionSkipGuiOptionsToggleListItemText": "Version skip",
                 "FSGuiToggleToggleCategoryHeaderText": "File System - 0100000000000000",
