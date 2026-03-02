@@ -298,7 +298,7 @@ public:
                 "PluginName": "sys-patch",
                 "OptionsGuiOptionsCategoryHeaderText": "Options",
                 "PatchSysMMCGuiOptionsToggleListItemText": "Patch sysMMC",
-                "PatchemuMMCGuiOptionsToggleListItemText": "Patch emuMMC",
+                "PatchEmuMMCGuiOptionsToggleListItemText": "Patch emuMMC",
                 "LoggingGuiOptionsToggleListItemText": "Logging",
                 "VersionSkipGuiOptionsToggleListItemText": "Version skip",
                 "FSGuiToggleToggleCategoryHeaderText": "File System - 0100000000000000",
