@@ -21,44 +21,98 @@ u64 AMS_HASH{}; // set on startup
 bool VERSION_SKIP{}; // set on startup
 
 template<typename T>
-constexpr void str2hex(const char* s, T* data, u8& size) {
-    // skip leading 0x (if any)
-    if (s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) {
-        s += 2;
-    }
+constexpr void hex_to_bytes(const char* s, T* data, u8& size) {
+    if (s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) s += 2;
 
-    // invalid string will cause a compile-time error due to no return
-    constexpr auto hexstr_2_nibble = [](char c) -> u8 {
-        if (c >= 'A' && c <= 'F') { return c - 'A' + 10; }
-        if (c >= 'a' && c <= 'f') { return c - 'a' + 10; }
-        if (c >= '0' && c <= '9') { return c - '0'; }
+    constexpr auto nibble = [](char c) -> u8 {
+        if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+        if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+        if (c >= '0' && c <= '9') return c - '0';
+        return 0;
     };
 
-    // parse and convert string
-    while (*s != '\0') {
-        if (sizeof(T) == sizeof(u16) && *s == '.') {
-            data[size] = REGEX_SKIP;
-            s += 2; // consume both dots of ".."
+    while (*s) {
+        u8 high = nibble(*s++);
+        u8 low  = nibble(*s++);
+        data[size++] = (high << 4) | low;
+    }
+}
+
+template<typename T>
+constexpr void pattern_to_bytes(const char* s, T* data, u8& size) {
+    if (s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) s += 2;
+
+    constexpr auto nibble = [](char c) -> u8 {
+        if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+        if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+        if (c >= '0' && c <= '9') return c - '0';
+        return 0xFF; // invalid → will fail match
+    };
+
+    while (*s) {
+        if (*s == '.') {
+            u8 dot_count = 0;
+            while (s[dot_count] == '.') ++dot_count;
+
+            u8 wildcards = dot_count / 2;
+
+            for (u8 i = 0; i < wildcards; ++i) {
+                data[size++] = REGEX_SKIP;
+            }
+
+            s += dot_count;
+
         } else {
-            data[size] |= hexstr_2_nibble(*s++) << 4;
-            data[size] |= hexstr_2_nibble(*s++) << 0;
+            u16 value = 0;
+            bool is_wild_high = false;
+            bool is_wild_low  = false;
+
+            // High nibble
+            if (*s == '?') {
+                is_wild_high = true;
+                ++s;
+            } else {
+                value |= nibble(*s++) << 8;
+            }
+
+            // Low nibble
+            if (*s == '?') {
+                is_wild_low = true;
+                ++s;
+            } else {
+                value |= nibble(*s++);
+            }
+
+            if (is_wild_high && is_wild_low) {
+                // ?? → full byte wildcard (same as ..)
+                data[size++] = REGEX_SKIP;
+            } else if (is_wild_high || is_wild_low) {
+                // Partial match: store value with high bit set to indicate mask needed
+                // We'll use: if value >= 0x100 → it's a masked byte
+                // value & 0xFF = actual byte, value >> 8 = mask (0xF0 or 0x0F)
+                u8 actual = value & 0xFF;
+                u8 mask   = is_wild_high ? 0x0F : 0xF0;
+                data[size++] = actual | (static_cast<u16>(mask) << 8);
+            } else {
+                // Exact byte
+                data[size++] = value;
+            }
         }
-        size++;
     }
 }
 
 struct PatternData {
     constexpr PatternData(const char* s) {
-        str2hex(s, data, size);
+        pattern_to_bytes(s, data, size);
     }
 
-    u16 data[60]{}; // reasonable max pattern length, adjust as needed
+    u16 data[60]{};
     u8 size{};
 };
 
 struct PatchData {
     constexpr PatchData(const char* s) {
-        str2hex(s, data, size);
+        hex_to_bytes(s, data, size);
     }
 
     template<typename T>
@@ -73,7 +127,7 @@ struct PatchData {
         return !std::memcmp(data, _data, size);
     }
 
-    u8 data[20]{}; // reasonable max patch length, adjust as needed
+    u8 data[20]{};
     u8 size{};
 };
 
@@ -224,6 +278,13 @@ constexpr auto ctest_applied(const u8* data, u32 inst) -> bool {
     return ctest_patch(inst).cmp(data);
 }
 
+// Note: Patterns can compose of byte wildcards represented as ".." or "??". Patterns can also consist of high, or low nibble wildcarding, represented, with the example being wildcarded being "A9" as "A?" or "?9".
+// example 1: just byte wildcarding:
+// C8FE4739 -> C8....39 = 2 bytes wildcarded
+// C8FE4739 -> C8????39 = 2 bytes wildcarded
+// C8FE4739 -> C?F?4??9 = 4 nibbles wildcarded
+// nibble wildcarding must be done with "?", and must not be mixed with ".", ".." should be used when wildcarding an entire byte, or "??", but not a mix of "?." or ".?"
+// a pattern can contain both "..", "??", or nibble wildcarding, as long as one does not mix "?." or "?."
 // patterns should be optimized in such a manner that they yield only one result.
 // patterns might yield results for more firmware versions, but if it yields more than one result (per firmware version), it should be condensed to near similar versions instead which only yields one result.
 // a pattern should not contain the bytes being patched, they should be wildcarded.
@@ -345,7 +406,9 @@ void patcher(Handle handle, const u8* data, size_t data_size, u64 addr, std::spa
             continue;
         }
 
-        for (u32 i = 0; i < data_size; i++) {
+        // Try to find and apply this pattern
+        bool found = false;
+        for (u32 i = 0; i < data_size && !found; i++) {
             if (i + p.byte_pattern.size >= data_size) {
                 break;
             }
@@ -354,8 +417,22 @@ void patcher(Handle handle, const u8* data, size_t data_size, u64 addr, std::spa
             // skipping over any bytes if the value is REGEX_SKIP
             u32 count{};
             while (count < p.byte_pattern.size) {
-                if (p.byte_pattern.data[count] != data[i + count] && p.byte_pattern.data[count] != REGEX_SKIP) {
-                    break;
+                u16 pattern_entry = p.byte_pattern.data[count];
+                u8 memory_byte    = data[i + count];
+
+                if (pattern_entry == REGEX_SKIP) {
+                    // full wildcard — always matches
+                } else if (pattern_entry > 0xFF) {
+                    // masked nibble match
+                    u8 expected = pattern_entry & 0xFF;
+                    u8 mask     = pattern_entry >> 8;
+                    if ((memory_byte & mask) != (expected & mask)) {
+                        break;
+                    }
+                } else {
+                    if (memory_byte != pattern_entry) {
+                        break;
+                    }
                 }
                 count++;
             }
@@ -378,12 +455,101 @@ void patcher(Handle handle, const u8* data, size_t data_size, u64 addr, std::spa
                     } else {
                         p.result = PatchResult::PATCHED_SYSPATCH;
                     }
-                    // move onto next pattern
-                    break;
+                    found = true;
                 } else if (p.applied(data + inst_offset + p.patch_offset, inst)) {
                     // patch already applied by sigpatches
                     p.result = PatchResult::PATCHED_FILE;
-                    break;
+                    found = true;
+                }
+            }
+        }
+    }
+}
+
+// Check if a patch entry is valid for the current firmware version
+auto is_patch_version_valid(const PatchEntry& patch) -> bool {
+    if (!VERSION_SKIP) {
+        return true;
+    }
+    return !(patch.min_fw_ver && patch.min_fw_ver > FW_VERSION) &&
+           !(patch.max_fw_ver && patch.max_fw_ver < FW_VERSION);
+}
+
+
+
+
+// Find and open the process with the given title_id
+auto find_process_by_title_id(u64 title_id, Handle& out_handle) -> bool {
+    u64 pids[0x50]{};
+    s32 process_count{};
+
+    if (R_FAILED(svcGetProcessList(&process_count, pids, 0x50))) {
+        return false;
+    }
+
+    for (s32 i = 0; i < process_count; i++) {
+        Handle handle{};
+        #ifdef USE_DEBUG_EVENT
+            DebugEvent event{};
+        #else
+            DebugEventInfo event{};
+        #endif
+
+        if (R_FAILED(svcDebugActiveProcess(&handle, pids[i]))) {
+            continue;
+        }
+
+        if (R_SUCCEEDED(svcGetDebugEvent(&event, handle))) {
+            if (event.type == DebugEventType_CreateProcess &&
+                event.info.create_process.program_id == title_id) {
+                out_handle = handle;
+                return true;
+            }
+        }
+
+        svcCloseHandle(handle);
+    }
+
+    return false;
+}
+
+// Patch all executable memory regions in a process
+auto patch_process_memory(Handle handle, const PatchEntry& patch, u8* buffer, u64 overlap_size) -> void {
+    MemoryInfo mem_info{};
+    u64 addr{};
+    u32 page_info{};
+
+    for (;;) {
+        if (R_FAILED(svcQueryDebugProcessMemory(&mem_info, &page_info, handle, addr))) {
+            break;
+        }
+        addr = mem_info.addr + mem_info.size;
+
+        // if addr=0 then we hit the reserved memory section
+        if (!addr) {
+            break;
+        }
+        // skip memory that we don't want
+        if (!mem_info.size || (mem_info.perm & Perm_Rx) != Perm_Rx || ((mem_info.type & 0xFF) != MemType_CodeStatic)) {
+            continue;
+        }
+
+        // Process this memory region in chunks
+        for (u64 sz = 0; sz < mem_info.size; sz += READ_BUFFER_SIZE - overlap_size) {
+            const auto actual_size = std::min(READ_BUFFER_SIZE, mem_info.size - sz);
+            if (R_FAILED(svcReadDebugProcessMemory(buffer + overlap_size, handle, mem_info.addr + sz, actual_size))) {
+                break;
+            } else {
+                patcher(handle, buffer, actual_size + overlap_size, mem_info.addr + sz - overlap_size, patch.patterns);
+                
+                // Manage overlap buffer for next iteration
+                if (actual_size >= overlap_size) {
+                    memcpy(buffer, buffer + READ_BUFFER_SIZE, overlap_size);
+                    std::memset(buffer + overlap_size, 0, READ_BUFFER_SIZE);
+                } else {
+                    const auto bytes_to_overlap = std::min<u64>(overlap_size, actual_size);
+                    memcpy(buffer, buffer + READ_BUFFER_SIZE + (actual_size - bytes_to_overlap), bytes_to_overlap);
+                    std::memset(buffer + bytes_to_overlap, 0, sizeof(buffer) - bytes_to_overlap);
                 }
             }
         }
@@ -391,79 +557,28 @@ void patcher(Handle handle, const u8* data, size_t data_size, u64 addr, std::spa
 }
 
 auto apply_patch(PatchEntry& patch) -> bool {
-    Handle handle{};
-    DebugEventInfo event_info{};
-
-    u64 pids[0x50]{};
-    s32 process_count{};
-    constexpr u64 overlap_size = 0x4f;
-    static u8 buffer[READ_BUFFER_SIZE + overlap_size];
-
-    std::memset(buffer, 0, sizeof(buffer));
-
     // skip if version isn't valid
-    if (VERSION_SKIP &&
-        ((patch.min_fw_ver && patch.min_fw_ver > FW_VERSION) ||
-        (patch.max_fw_ver && patch.max_fw_ver < FW_VERSION))) {
+    if (!is_patch_version_valid(patch)) {
         for (auto& p : patch.patterns) {
             p.result = PatchResult::SKIPPED;
         }
         return true;
     }
 
-    if (R_FAILED(svcGetProcessList(&process_count, pids, 0x50))) {
+    Handle handle{};
+
+    if (!find_process_by_title_id(patch.title_id, handle)) {
         return false;
     }
 
-    for (s32 i = 0; i < (process_count - 1); i++) {
-        if (R_SUCCEEDED(svcDebugActiveProcess(&handle, pids[i])) &&
-            R_SUCCEEDED(svcGetDebugEvent(&event_info, handle)) &&
-            patch.title_id == event_info.info.create_process.program_id) {
-            MemoryInfo mem_info{};
-            u64 addr{};
-            u32 page_info{};
+    constexpr u64 overlap_size = 0x4f;
+    static u8 buffer[READ_BUFFER_SIZE + overlap_size];
+    std::memset(buffer, 0, sizeof(buffer));
 
-            for (;;) {
-                if (R_FAILED(svcQueryDebugProcessMemory(&mem_info, &page_info, handle, addr))) {
-                    break;
-                }
-                addr = mem_info.addr + mem_info.size;
-
-                // if addr=0 then we hit the reserved memory section
-                if (!addr) {
-                    break;
-                }
-                // skip memory that we don't want
-                if (!mem_info.size || (mem_info.perm & Perm_Rx) != Perm_Rx || ((mem_info.type & 0xFF) != MemType_CodeStatic)) {
-                    continue;
-                }
-
-                for (u64 sz = 0; sz < mem_info.size; sz += READ_BUFFER_SIZE - overlap_size) {
-                    const auto actual_size = std::min(READ_BUFFER_SIZE, mem_info.size - sz);
-                    if (R_FAILED(svcReadDebugProcessMemory(buffer + overlap_size, handle, mem_info.addr + sz, actual_size))) {
-                        break;
-                    } else {
-                        patcher(handle, buffer, actual_size + overlap_size, mem_info.addr + sz - overlap_size, patch.patterns);
-                        if (actual_size >= overlap_size) {
-                            memcpy(buffer, buffer + READ_BUFFER_SIZE, overlap_size);
-                            std::memset(buffer + overlap_size, 0, READ_BUFFER_SIZE);
-                        } else {
-                            const auto bytes_to_overlap = std::min<u64>(overlap_size, actual_size);
-                            memcpy(buffer, buffer + READ_BUFFER_SIZE + (actual_size - bytes_to_overlap), bytes_to_overlap);
-                            std::memset(buffer + bytes_to_overlap, 0, sizeof(buffer) - bytes_to_overlap);
-                        }
-                    }
-                }
-            }
-            svcCloseHandle(handle);
-            return true;
-        } else if (handle) {
-            svcCloseHandle(handle);
-            handle = 0;
-        }
-    }
-
-    return false;
+    patch_process_memory(handle, patch, buffer, overlap_size);
+    
+    svcCloseHandle(handle);
+    return true;
 }
 
 // creates a directory, non-recursive!
