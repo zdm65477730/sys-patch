@@ -120,6 +120,9 @@ public:
         list->addItem(config_es4.create_list_item("es_19.0.0-21.2.0"));
         list->addItem(config_es5.create_list_item("es_22.0.0+"));
 
+        list->addItem(new tsl::elm::CategoryHeader("AM - 0100000000000023"));
+        list->addItem(config_am1.create_list_item("am_homebrew_fix_22.0.0+"));
+
         list->addItem(new tsl::elm::CategoryHeader("OLSC - 010000000000003E"));
         list->addItem(config_olsc1.create_list_item("olsc_6.0.0-14.1.2"));
         list->addItem(config_olsc2.create_list_item("olsc_15.0.0-18.1.0"));
@@ -155,6 +158,7 @@ public:
     ConfigEntry config_es3{"es", "es_12.0.0-18.1.0", true};
     ConfigEntry config_es4{"es", "es_19.0.0-21.2.0", true};
     ConfigEntry config_es5{"es", "es_22.0.0+", true};
+    ConfigEntry config_am1{"am", "am_homebrew_fix_22.0.0+ ", true};
     ConfigEntry config_olsc1{"olsc", "olsc_6.0.0-14.1.2", true};
     ConfigEntry config_olsc2{"olsc", "olsc_15.0.0-18.1.0", true};
     ConfigEntry config_olsc3{"olsc", "olsc_19.0.0+", true};

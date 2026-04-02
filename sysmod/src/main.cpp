@@ -269,6 +269,10 @@ constinit Patterns es_patterns[] = {
     { "es_22.0.0+", "0xA0630091....FE97A08300D1....FE97", 16, 0, es_cond, mov0_patch, mov0_applied, true, MAKEHOSVERSION(22,0,0), FW_VER_ANY },
 };
 
+constinit Patterns am_patterns[] = {
+    { "am_homebrew_fix_22.0.0+", "0x94......F9......F9........00410491", 17, 0, bl_cond, nop_patch, nop_applied, true, MAKEHOSVERSION(22,0,0), FW_VER_ANY },
+};
+
 constinit Patterns olsc_patterns[] = {
     { "olsc_6.0.0-14.1.2", "0x00..73....F9....4039", 42, 0, bl_cond, ret1_patch, ret1_applied, true, MAKEHOSVERSION(6,0,0), MAKEHOSVERSION(14,1,2) },
     { "olsc_15.0.0-18.1.0", "0x00..73....F9....4039", 38, 0, bl_cond, ret1_patch, ret1_applied, true, MAKEHOSVERSION(15,0,0), MAKEHOSVERSION(18,1,0) },
@@ -303,6 +307,7 @@ constinit PatchEntry patches[] = {
     { "olsc", 0x010000000000003E, olsc_patterns, MAKEHOSVERSION(6,0,0) },
     { "nifm", 0x010000000000000F, nifm_patterns },
     { "nim", 0x0100000000000025, nim_patterns },
+    { "am", 0x0100000000000023, am_patterns, MAKEHOSVERSION(22,0,0) },
 };
 
 struct EmummcPaths {
