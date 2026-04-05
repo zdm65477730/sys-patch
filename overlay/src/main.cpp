@@ -27,6 +27,8 @@ std::string map_section_to_text(std::string &section) {
         sectionDisplay = "NifmGuiLogListItemText"_tr;
     } else if (sectionDisplay == "nim") {
         sectionDisplay = "NimGuiLogListItemText"_tr;
+    } else if (sectionDisplay == "am") {
+        sectionDisplay = "AmGuiLogListItemText"_tr;
     } else if (sectionDisplay == "stats") {
         sectionDisplay = "StatsGuiLogListItemText"_tr;
     }
@@ -346,6 +348,7 @@ public:
                 "OlscGuiLogListItemText": "Online Save Storage",
                 "NifmGuiLogListItemText": "Network Connection",
                 "NimGuiLogListItemText": "Network Identity",
+                "AmGuiLogListItemText": "Application Manager",
                 "StatsGuiLogListItemText": "Statistics",
                 "VersionGuiLogListItemText": "Version",
                 "BuildDateGuiLogListItemText": "Build Date",
