@@ -2,7 +2,7 @@ MAKEFILES	:=	sysmod overlay
 TARGETS		:= $(foreach dir,$(MAKEFILES),$(CURDIR)/$(dir))
 
 # the below was taken from atmosphere + switch-examples makefile
-VERSION := 1.6.0
+VERSION := 1.6.1
 export VERSION_WITH_HASH := v$(VERSION)-$(shell git describe --always)
 
 export BUILD_DATE := -DDATE_YEAR=\"$(shell date +%Y)\" \

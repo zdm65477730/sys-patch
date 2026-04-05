@@ -170,6 +170,10 @@ public:
         list->addItem(config_es2.create_list_item("ESeTicketChkV2GuiToggleToggleListItemText"_tr.c_str()));
         list->addItem(config_es3.create_list_item("ESeTicketChkV3GuiToggleToggleListItemText"_tr.c_str()));
         list->addItem(config_es4.create_list_item("ESeTicketChkV4GuiToggleToggleListItemText"_tr.c_str()));
+        list->addItem(config_es5.create_list_item("ESeTicketChkV5GuiToggleToggleListItemText"_tr.c_str()));
+
+        list->addItem(new tsl::elm::CategoryHeader("AMGuiToggleCategoryHeaderText"_tr));
+        list->addItem(config_am1.create_list_item("AMeHomebrewFixV1GuiToggleToggleListItemText"_tr.c_str()));
 
         list->addItem(new tsl::elm::CategoryHeader("OLSCGuiToggleCategoryHeaderText"_tr));
         list->addItem(config_olsc1.create_list_item("OnlineSaveStorageChkV1GuiToggleToggleListItemText"_tr.c_str()));
@@ -204,7 +208,9 @@ public:
     ConfigEntry config_es1{"es", "es_1.0.0-8.1.1", true};
     ConfigEntry config_es2{"es", "es_9.0.0-11.0.1", true};
     ConfigEntry config_es3{"es", "es_12.0.0-18.1.0", true};
-    ConfigEntry config_es4{"es", "es_19.0.0+", true};
+    ConfigEntry config_es4{"es", "es_19.0.0-21.2.0", true};
+    ConfigEntry config_es5{"es", "es_22.0.0+", true};
+    ConfigEntry config_am1{"am", "am_homebrew_fix_22.0.0+ ", true};
     ConfigEntry config_olsc1{"olsc", "olsc_6.0.0-14.1.2", true};
     ConfigEntry config_olsc2{"olsc", "olsc_15.0.0-18.1.0", true};
     ConfigEntry config_olsc3{"olsc", "olsc_19.0.0+", true};
@@ -311,7 +317,10 @@ public:
                 "ESeTicketChkV1GuiToggleToggleListItemText": "Disable eTicket Validation [1.0.0-8.1.1]",
                 "ESeTicketChkV2GuiToggleToggleListItemText": "Disable eTicket Validation [9.0.0-11.0.1]",
                 "ESeTicketChkV3GuiToggleToggleListItemText": "Disable eTicket Validation [12.0.0-18.1.0]",
-                "ESeTicketChkV4GuiToggleToggleListItemText": "Disable eTicket Validation [19.0.0+]",
+                "ESeTicketChkV4GuiToggleToggleListItemText": "Disable eTicket Validation [19.0.0-21.2.0]",
+                "ESeTicketChkV5GuiToggleToggleListItemText": "Disable eTicket Validation [22.0.0+]",
+                "AMGuiToggleCategoryHeaderText": "Application Manager - 0100000000000033",
+                "AMeHomebrewFixV1GuiToggleToggleListItemText": "Homebrew crash workaround [22.0.0+]",
                 "OLSCGuiToggleCategoryHeaderText": "Online Save Storage - 010000000000003E",
                 "OnlineSaveStorageChkV1GuiToggleToggleListItemText": "Disable Online Save Storage Validation [6.0.0-14.1.2]",
                 "OnlineSaveStorageChkV2GuiToggleToggleListItemText": "Disable Online Save Storage Validation [15.0.0-18.1.0]",
