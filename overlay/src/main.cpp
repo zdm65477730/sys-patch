@@ -344,7 +344,7 @@ public:
 
                 if (status.starts_with("Patched")) {
                     const auto is_sys_patch = status.ends_with("(sys-patch)");
-                    const auto display_value = detail.empty() ? "PatchedGuiLogListItemText"_tr : "PatchedGuiLogListItemText"_tr + "@" + detail;
+                    const auto display_value = detail.empty() ? "PatchedGuiLogListItemText"_tr : "PatchedGuiLogListItemText"_tr + detail;
                     user->list->addItem(new ColouredListItem(
                         Key,
                         display_value,
