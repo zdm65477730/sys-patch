@@ -30,6 +30,8 @@ std::string map_section_to_text(std::string &section) {
         sectionDisplay = "NimGuiLogListItemText"_tr;
     } else if (sectionDisplay == "am") {
         sectionDisplay = "AmGuiLogListItemText"_tr;
+    } else if (sectionDisplay == "ns") {
+        sectionDisplay = "NSGuiLogListItemText"_tr;
     } else if (sectionDisplay == "stats") {
         sectionDisplay = "StatsGuiLogListItemText"_tr;
     }
@@ -434,6 +436,7 @@ public:
                 "NifmGuiLogListItemText": "Network Connection",
                 "NimGuiLogListItemText": "Network Identity",
                 "AmGuiLogListItemText": "Application Manager",
+                "NSGuiLogListItemText": "NS Sysmodule",
                 "StatsGuiLogListItemText": "Statistics",
                 "VersionGuiLogListItemText": "Version",
                 "BuildDateGuiLogListItemText": "Build Date",

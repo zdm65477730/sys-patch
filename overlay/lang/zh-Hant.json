@@ -53,6 +53,7 @@
     "NifmGuiLogListItemText": "網路連線",
     "NimGuiLogListItemText": "網路身分",
     "AmGuiLogListItemText": "應用管理",
+    "NSGuiLogListItemText": "系統模組",
     "StatsGuiLogListItemText": "統計資訊",
     "VersionGuiLogListItemText": "版本",
     "BuildDateGuiLogListItemText": "編譯日期",

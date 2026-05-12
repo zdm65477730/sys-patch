@@ -53,6 +53,7 @@
     "NifmGuiLogListItemText": "网络连接",
     "NimGuiLogListItemText": "网络身份",
     "AmGuiLogListItemText": "应用管理",
+    "NSGuiLogListItemText": "系统模块",
     "StatsGuiLogListItemText": "统计信息",
     "VersionGuiLogListItemText": "版本",
     "BuildDateGuiLogListItemText": "编译日期",
