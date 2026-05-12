@@ -39,9 +39,9 @@ include $(DEVKITPRO)/libnx/switch_rules
 #---------------------------------------------------------------------------------
 APP_TITLE	:=	sys-patch
 APP_AUTHOR	:=	TotalJustice
-APP_VERSION :=	$(VERSION_DIRTY)
+APP_VERSION := $(VERSION_WITH_HASH)
 
-TARGET		:=	sys-patch-overlay
+TARGET      := $(APP_TITLE)
 BUILD		:=	build
 SOURCES		:=	src ../common/minIni
 DATA		:=	data
@@ -57,9 +57,9 @@ ARCH	:=	-march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE
 CFLAGS	:=	-g -Wall -O2 -ffunction-sections \
 			$(ARCH) $(DEFINES) $(CUSTOM_DEFINES)
 
-CFLAGS	+=	$(INCLUDE) -D__SWITCH__
+CFLAGS  += $(INCLUDE) -D__SWITCH__ -DAPPTITLE=\"$(APP_TITLE)\"
 
-CXXFLAGS	:= $(CFLAGS) -std=c++23 -fno-exceptions
+CXXFLAGS := $(CFLAGS) -std=c++23 -fexceptions
 
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
@@ -165,12 +165,12 @@ endif
 #---------------------------------------------------------------------------------
 all: $(BUILD)
 
-
 $(BUILD):
 	@[ -d $@ ] || mkdir -p $@
 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
 
-	@mkdir -p out/switch/.overlays
+	@mkdir -p $(CURDIR)/out/switch/.overlays/lang/$(APP_TITLE)
+	@cp -r $(CURDIR)/lang/* $(CURDIR)/out/switch/.overlays/lang/$(APP_TITLE)/
 	@cp $(CURDIR)/$(TARGET).ovl out/switch/.overlays/
 
 #---------------------------------------------------------------------------------
@@ -178,19 +178,6 @@ clean:
 	@echo clean ...
 	@rm -fr $(BUILD) $(TARGET).ovl $(TARGET).nro $(TARGET).nacp $(TARGET).elf
 	@rm -rf out/
-	@rm -f sys-patch-overlay.zip
-
-#---------------------------------------------------------------------------------
-ftp: all
-	@echo making dist ...
-	curl -T sys-patch-overlay.ovl ftp://192.168.200.71:5000/switch/.overlays/ --user tj:12345678
-
-#---------------------------------------------------------------------------------
-dist: all
-	@echo making dist ...
-
-	@rm -f sys-patch-overlay.zip
-	@cd out; zip -r ../sys-patch-overlay.zip ./*; cd ../
 #---------------------------------------------------------------------------------
 else
 .PHONY:	all
