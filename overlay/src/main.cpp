@@ -31,7 +31,7 @@ std::string map_section_to_text(std::string &section) {
     } else if (sectionDisplay == "am") {
         sectionDisplay = "AmGuiLogListItemText"_tr;
     } else if (sectionDisplay == "ns") {
-        sectionDisplay = "NSGuiLogListItemText"_tr;
+        sectionDisplay = "NsGuiLogListItemText"_tr;
     } else if (sectionDisplay == "stats") {
         sectionDisplay = "StatsGuiLogListItemText"_tr;
     }
@@ -350,7 +350,7 @@ public:
 
                 if (status.starts_with("Patched")) {
                     const auto is_sys_patch = status.ends_with("(sys-patch)");
-                    const auto display_value = detail.empty() ? "PatchedGuiLogListItemText"_tr : "PatchedGuiLogListItemText"_tr + detail;
+                    const auto display_value = detail.empty() ? "PatchedGuiLogListItemText"_tr : "PatchedGuiLogListItemText"_tr + "@" + detail;
                     user->list->addItem(new ColouredListItem(
                         Key,
                         display_value,
@@ -406,7 +406,7 @@ public:
                 "ESeTicketChkV3GuiToggleToggleListItemText": "Disable eTicket Validation [12.0.0-18.1.0]",
                 "ESeTicketChkV4GuiToggleToggleListItemText": "Disable eTicket Validation [19.0.0-21.2.0]",
                 "ESeTicketChkV5GuiToggleToggleListItemText": "Disable eTicket Validation [22.0.0+]",
-                "AMGuiToggleCategoryHeaderText": "Application Manager - 0100000000000023",
+                "AMGuiToggleCategoryHeaderText": "Applet Management - 0100000000000023",
                 "AMeHomebrewFixV1GuiToggleToggleListItemText": "Homebrew crash workaround [22.0.0+]",
                 "OLSCGuiToggleCategoryHeaderText": "Online Save Storage - 010000000000003E",
                 "OnlineSaveStorageChkV1GuiToggleToggleListItemText": "Disable Online Save Storage Validation [6.0.0-14.1.2]",
@@ -422,9 +422,9 @@ public:
                 "NIMBlockFWUpgradeV3GuiToggleToggleListItemText": "Block System Firmware Update [7.0.0-10.2.0]",
                 "NIMBlockFWUpgradeV4GuiToggleToggleListItemText": "Block System Firmware Update [11.0.0-11.0.1]",
                 "NIMBlockFWUpgradeV5GuiToggleToggleListItemText": "Block System Firmware Update [12.0.0+]",
-                "NSGuiToggleCategoryHeaderText": "NS Sysmodule - 010000000000001F",
-                "NSForceGamecardRegionToGlobalGuiToggleToggleListItemText": "Force gamecard region to global",
-                "LogGuiLogCategoryHeaderText": "Logs: ",
+                "NSGuiToggleCategoryHeaderText": "Application Management - 010000000000001F",
+                "NSForceGameCardRegionToGlobalGuiToggleToggleListItemText": "Force gamecard region to global",
+                "LogGuiLogCategoryHeaderText": "Logs:",
                 "PatchedGuiLogListItemText": "Patched",
                 "UnPatchedGuiLogListItemText": "Unpatched",
                 "DisabledGuiLogListItemText": "Disabled",
@@ -435,8 +435,8 @@ public:
                 "OlscGuiLogListItemText": "Online Save Storage",
                 "NifmGuiLogListItemText": "Network Connection",
                 "NimGuiLogListItemText": "Network Identity",
-                "AmGuiLogListItemText": "Application Manager",
-                "NSGuiLogListItemText": "NS Sysmodule",
+                "AmGuiLogListItemText": "Applet Management",
+                "NsGuiLogListItemText": "Application Management",
                 "StatsGuiLogListItemText": "Statistics",
                 "VersionGuiLogListItemText": "Version",
                 "BuildDateGuiLogListItemText": "Build Date",

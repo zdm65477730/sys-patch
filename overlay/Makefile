@@ -39,9 +39,9 @@ include $(DEVKITPRO)/libnx/switch_rules
 #---------------------------------------------------------------------------------
 APP_TITLE	:=	sys-patch
 APP_AUTHOR	:=	TotalJustice
-APP_VERSION :=	$(VERSION_WITH_HASH)
+APP_VERSION := $(VERSION_WITH_HASH)
 
-TARGET		:=	$(APP_TITLE)
+TARGET      := $(APP_TITLE)
 BUILD		:=	build
 SOURCES		:=	src ../common/minIni
 DATA		:=	data
@@ -57,9 +57,9 @@ ARCH	:=	-march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE
 CFLAGS	:=	-g -Wall -O2 -ffunction-sections \
 			$(ARCH) $(DEFINES) $(CUSTOM_DEFINES)
 
-CFLAGS	+=	$(INCLUDE) -D__SWITCH__ -DAPPTITLE=\"$(APP_TITLE)\"
+CFLAGS  += $(INCLUDE) -D__SWITCH__ -DAPPTITLE=\"$(APP_TITLE)\"
 
-CXXFLAGS	:= $(CFLAGS) -std=c++23 -fexceptions
+CXXFLAGS := $(CFLAGS) -std=c++23 -fexceptions
 
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
@@ -165,7 +165,6 @@ endif
 #---------------------------------------------------------------------------------
 all: $(BUILD)
 
-
 $(BUILD):
 	@[ -d $@ ] || mkdir -p $@
 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
@@ -179,7 +178,6 @@ clean:
 	@echo clean ...
 	@rm -fr $(BUILD) $(TARGET).ovl $(TARGET).nro $(TARGET).nacp $(TARGET).elf
 	@rm -rf out/
-	@rm -f sys-patch-overlay.zip
 #---------------------------------------------------------------------------------
 else
 .PHONY:	all
