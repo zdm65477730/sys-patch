@@ -30,7 +30,7 @@ jobs:
       - name: Setup ENV parameters
         run: |
           VER_FILE=Makefile
-          VERSION=$(awk '/^VERSION/{print $3}' $VER_FILE)
+          VERSION=$(awk '/VERSION :=/{print $NF}' "$VER_FILE")
           echo "TAG=v${VERSION}" >> "${GITHUB_ENV}"
           echo "RELEASE_NAME=sys-patch v${VERSION}" >> "${GITHUB_ENV}"
         shell: bash
